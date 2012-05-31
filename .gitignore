@@ -1,0 +1,13 @@
+syntax: glob
+
+*#
+*~
+*.pyc
+*.db
+.DS_Store
+.classpath
+.project
+build/
+.pydevproject
+.metadata
+.settings
