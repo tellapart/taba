@@ -89,8 +89,8 @@ test_name_10m	1100.00	2
 test_name_1h	1100.00	2
 test_name_1d	1100.00	2
 
-This means the variable "test_name" has seen 2 CounterGroup Events over the
-last 10 minutes (but not within the last minute), whose sum is 1100.00.
+This means the Tab "test_name" has seen 2 CounterGroup Events over the last 10
+minutes (but not within the last minute), whose sum is 1100.00.
 
 You can now terminate the Server and Agent processes.
 
