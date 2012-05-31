@@ -1,0 +1,85 @@
+# Nginx configuration that proxies HTTP/HTTPS traffic to the local Taba Server
+# workers.
+#
+# To deploy, copy this file into /etc/nginx/sites-available, set the values
+# of 'ssl_certificate', 'ssl_certificate_key', and 'proxy_pass'; and symlink
+# from sites-enabled.
+
+# Define a custom log format that's just like Nginx's 'combined' format except
+# it also logs the value of the X-Forwarded-For request header.
+log_format combined_forwarded_ip '$remote_addr ($http_x_forwarded_for) - $remote_user [$time_local]  '
+                                 '"$request" $status $body_bytes_sent '
+                                 '"$http_referer" "$http_user_agent"';
+
+client_max_body_size 512M;
+
+# Specify the primary and secondary round-robin load balancers.
+upstream roundrobin_primary {
+  server localhost:8370;
+  server localhost:8371;
+  server localhost:8372;
+  server localhost:8373;
+  server localhost:8374;
+  server localhost:8375;
+  server localhost:8376;
+  server localhost:8377;
+}
+
+upstream roundrobin_secondary {
+  server localhost:8470;
+  server localhost:8471;
+  server localhost:8472;
+  server localhost:8473;
+  server localhost:8474;
+  server localhost:8475;
+  server localhost:8476;
+  server localhost:8477;
+}
+
+server {
+  listen 8279;
+
+  access_log  /mnt/log/nginx/localhost.access.log combined_forwarded_ip;
+  error_log  /mnt/log/nginx/error.log;
+
+  # Set proxy buffer size to 8k. By default it is 4k. See http://goo.gl/0Edwx
+  proxy_buffer_size 8k;
+
+  # Set number and size of proxy buffers to handle up to 32k on top of the
+  # default 8k. Note that this amount is allocatable per connection but will
+  # only be allocated on demand.
+  proxy_buffers 4 8k;
+
+  # Compression is handled by the Taba Protocol
+  gzip off;
+
+  # Only allow GET, HEAD, and POST requests.
+  if ($request_method !~ ^(GET|HEAD|POST)$ ) {
+    return 444;
+  }
+
+  # Set the timeout to 10 minutes, to allow for large requests to complete.
+  proxy_read_timeout	600;
+
+  # Send requests to the next handler on an error, or an HTTP 503 (but NOT on
+  # a timeout, which is the default)
+  proxy_next_upstream	error http_503;
+
+  proxy_set_header  Host    $host;
+  proxy_set_header  X-Real-IP	$remote_addr;
+  proxy_set_header  X-Forwarded-For	$proxy_add_x_forwarded_for;
+
+  # All other requests get handled by Taba Server processes.
+  location /post_zip {
+    proxy_pass http://roundrobin_secondary;
+  }
+
+  location /post {
+    proxy_pass http://roundrobin_secondary;
+  }
+
+  location / {
+    proxy_pass http://roundrobin_primary;
+  }
+
+}

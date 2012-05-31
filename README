@@ -1,0 +1,86 @@
+Introduction
+====================
+
+Taba is a service for aggregating events from a distributed system in near
+real-time. It was built to handle high throughput and scale easily. At
+TellApart we use Taba to track over 10,000 variables generating over 10,000,000
+events per minute.
+
+Check out an overview of Taba's architecture on the TellApart Eng Blog:
+http://tellapart.com/taba-low-latency-event-aggragation
+
+Also, take a look at the Overview wiki page:
+http://github.com/tellapart/taba/wiki/Overview
+
+Installing Taba
+====================
+
+Taba was designed to run on Python 2.6 (limited support has been added for
+Python 2.7, but it is not officially supported). Taba has the following
+dependencies:
+
+gevent (0.13.1)
+cjson (1.0.5)
+cython (0.13)
+
+To run the Taba unit tests, the following are also required:
+
+unittest2
+mox
+
+Finally, to build the dependencies, the following are needed:
+
+gcc
+make
+python-dev
+libevent-dev
+
+To install the dependencies on Ubuntu (12.04), for example:
+
+sudo apt-get install gcc
+sudo apt-get install make
+sudo apt-get install python-dev
+sudo apt-get install libevent-dev
+sudo apt-get install python-setuptools
+
+sudo easy_install gevent
+sudo easy_install python-cjson
+sudo easy_install cython
+
+sudo easy_install unittest2
+sudo easy_install mox
+
+To install Taba, simply download and extract the source repository. (Deployment
+tools are in the works for later releases). Execute run_tests.sh from the root
+to make sure everything is installed correctly.
+
+Installing Redis
+====================
+
+The Taba Server is desined to use Redis 2.4 as its datastore (a single process
+Taba server can run with an in-process memory mode, but this is not recommended
+for actual deployments.)
+
+To install Redis 2.4:
+
+# Download and extract Redis 2.4
+wget http://redis.googlecode.com/files/redis-2.4.14.tar.gz
+tar -zxvf redis-2.4.14.tar.gz
+cd redis-2.4.14/
+
+# Build
+make
+
+# Optionally run the tests
+sudo apt-get install tcl8.5
+make test
+
+# Install
+sudo make install
+
+Deploying Taba
+====================
+
+There are many ways to deploy Taba, depending on the use case. See
+examples/EXAMPLES for pointers on how to get started.
+

@@ -1,0 +1,179 @@
+There are many ways to deploy Taba, from a single instance with in-process
+storage, to a fully distributed service with multiple dedicated Server and DB
+instances. This document shows a number simple deployment options, as a
+starting point.
+
+These examples use the files in examples/
+
+Basics
+====================
+
+Almost all Taba deployments have 4 layers: Clients, Agents[1], Servers, and
+Database[2]. Clients are embedded in the applications generating Events and
+send them to Agents, generally running on the same instance. Agents buffer and
+send these Events to Server processes. There can be any number of Server
+processes on as many instances as necessary (Agents know how to efficiently
+distribute requests to a group of Server end-points). Server processes use one
+or multiple Redis processes as a backing Datastore, transparently sharding the
+data across them.
+
+[1] It is possible to send events from a Client to a Server directly - Agents
+and Servers expose the same posting interface. However this isn't recommended
+for production deployments, as the Agent contains sophisticated buffering,
+distribution, and durability features that Clients do not. The use of Agents
+vastly increases the data durability of Taba deployments.
+
+[2] Servers can run in memory-only mode. However, this only works for
+deployments with a single Server process, and doesn't provide any form of
+persistence.
+
+Using the Examples
+====================
+
+These examples use the files in the examples/ folder. The run_agent.sh,
+run_client.sh, and run_server.sh scripts are wrappers which setup the Python
+execution path and call the main class of the respective services. They are
+designed to be run from within the examples/ folder. run_agent.sh and
+run_server.sh expect a single argument, which it the settings file to use for
+launching the service. run_client.sh executes client.py.
+
+Simple single instance deployment
+====================
+
+The first deployment will consist of a single Server process with in-memory
+storage, a single Agent process, and a mock Client script, all running on the
+same instance.
+
+First, start a single Server process with in-memory storage:
+
+$ bash run_server.sh server_settings_memory.json &
+
+This should launch a single Taba Server process (take a look at
+server_settings_memory.json to see what settings resulted in this
+configuration). The Server will start logging to server.log in the same
+folder.
+
+At this point, we can query the Server. For example, we can ask for its status:
+
+$ curl localhost:8370/status
+{"applied_latency": 0.0}
+
+Next, start the Agent, pointing it at the single Server process:
+
+$ bash run_agent.sh agent_settings_single.json &
+
+This should launch an Agent process. It will start logging to agent.log in the
+same folder.
+
+Now, we can run the Client script, to generate some Events:
+
+$ bash run_client.sh
+
+This will generate a couple Events and send them to the Agent. The Agent will
+then forward them to the Server, where they will be processed. We can ask the
+Server what Clients it knows about:
+
+$ curl localhost:8370/names
+test_client
+taba_server
+
+Note that there are two Clients: our client.py script ("test_client"), and the
+Taba Server itself. The Taba Server posts some statistics to itself for
+tracking internal metrics.
+
+We can ask the Server for the Aggregated results of Tabs client.py generated:
+
+$ curl localhost:8370/taba?client=test_client
+test_name_1m	0.00	0
+test_name_10m	1100.00	2
+test_name_1h	1100.00	2
+test_name_1d	1100.00	2
+
+This means the variable "test_name" has seen 2 CounterGroup Events over the
+last 10 minutes (but not within the last minute), whose sum is 1100.00.
+
+You can now terminate the Server and Agent processes.
+
+Adding a Redis Datastore
+====================
+
+The in-memory datastore works for trivial deployments, but doesn't allow us to
+scale. The next step it to add a Redis backend to the Taba Server.
+
+First, we need a running Redis service[1]. From the Redis source folder created
+during the installation process, run:
+
+$ cd utils
+$ sudo ./install_server.sh
+
+Select all the default options (port 6379). This will install and start a Redis
+service. From the examples folder, start the Server processes:
+
+$ bash run_server.sh server_settings_single-shard.json &
+
+Note that this launches two Server processes, and points them both at the Redis
+service on port 6379.
+
+We can not launch the Agent, pointing it at both Server processes, and generate
+the test data again:
+
+$ bash run_agent.sh agent_settings_multi.json &
+$ bash run_client.sh
+
+We can now request the data from either Server process:
+
+$ curl localhost:8370/clients
+test_client
+taba_server
+
+$ curl localhost:8371/names
+taba_events_processed
+test_name
+taba_average_applied_latency
+
+We can now also restart the Server processes, and the data will be persisted.
+
+[3] You can setup Redis however you like, as long as it is available to
+localhost:6379. If you would like to deploy it elsewhere, update
+server_settings_single-shard.json.
+
+Sharding Redis
+====================
+
+Sharding the Server process gets us a long way to a fully scalable deployment.
+However, we will eventually hit the limits of a single Redis process. The Taba
+Server has the ability to shard Redis across multiple processes[4].
+
+First, we need a second Redis service to store data in. From the Redis install
+folder:
+
+$ cd utils
+$ sudo ./install_server.sh
+
+When prompted for the port, choose 6380. Select the default for the rest of the
+options.
+
+Now, restart the Server processes, pointing them at the pair of Redis processes:
+
+$ bash run_server.sh server_settings_multi-shard.json &
+
+We can now run all the same commands on the Client and Server to generate and
+view data.
+
+[4] Note that while it is possible to change the number of Redis processes in a
+production system without any down-time or data loss, it is more complicated
+than simply launching more processes and pointing the Servers at them. Any
+change in the number or layout of the Redis shards should be considered
+carefully.
+
+More Details
+====================
+
+These examples have shown simple deployments of the Taba service. A production
+system will likely run on multiple instances, include a more detailed
+configuration of Redis (including backups), and include monitoring.
+
+The multiple Server processes are intended to be used behind an Nginx reverse
+proxy. A sample configuration file ("taba_server_nginx_site_conf") is included
+with the example files.
+

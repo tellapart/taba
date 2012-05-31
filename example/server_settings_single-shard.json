@@ -1,0 +1,30 @@
+{
+  "PRIMARY_BASE_PORT": 8370,
+  "SECONDARY_BASE_PORT": 8470,
+  "TABA_SERVER_WORKERS": 2,
+
+  "TABA_USE_MEMORY_DB": false,
+  "TABA_DB_VBUCKETS": 1024,
+  "TABA_DB_ENDPOINTS": [
+    {
+      "host": "localhost",
+      "port": 6379,
+      "vbuckets": [
+        0,
+        1023
+      ]
+    }
+  ],
+
+  "TABA_SERVER_ENDPOINTS": [
+    {
+      "host": "localhost",
+      "port": 8370
+    },
+    {
+      "host": "localhost",
+      "port": 8371
+    }
+  ]
+
+}
