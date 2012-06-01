@@ -309,6 +309,8 @@ class TabaRegistryTestCase(mox.MoxTestBase):
     self.assertEquals(new_state.value, 'foo')
 
     self.mox.ResetAll()
+    self.mox.UnsetStubs()
+
     self.mox.StubOutWithMock(time, 'time')
     time.time().MultipleTimes().AndReturn(800)
     self.mox.ReplayAll()

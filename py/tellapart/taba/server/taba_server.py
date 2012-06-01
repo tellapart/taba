@@ -704,7 +704,7 @@ class TabaServer(object):
         range(
             group * group_size,
             min(group * group_size + group_size, total_blocks))
-        for group in xrange(math.ceil(total_blocks / group_size))]
+        for group in xrange(int(math.ceil(total_blocks / group_size)))]
 
     redistributor = RequestRedistributor(
         endpoints=self.server_endpoints,
