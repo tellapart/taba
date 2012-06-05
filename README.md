@@ -130,3 +130,5 @@ performance platform for real-time monitoring. It is used to monitor over
 10,000 Tabs, consuming nearly 15,000,000 Events per minute, and an average
 latency of under 30s.
 
+Any questions or comments can be forwarded to 
+[taba@tellapart.com](mailto:taba@tellapart.com)
