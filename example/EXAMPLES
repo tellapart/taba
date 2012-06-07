@@ -34,7 +34,7 @@ These examples use the files in the examples/ folder. The run_agent.sh,
 run_client.sh, and run_server.sh scripts are wrappers which setup the Python
 execution path and call the main class of the respective services. They are
 designed to be run from within the examples/ folder. run_agent.sh and
-run_server.sh expect a single argument, which it the settings file to use for
+run_server.sh expect a single argument, which is the settings file to use for
 launching the service. run_client.sh executes client.py.
 
 Simple single instance deployment
@@ -98,9 +98,9 @@ Adding a Redis Datastore
 ====================
 
 The in-memory datastore works for trivial deployments, but doesn't allow us to
-scale. The next step it to add a Redis backend to the Taba Server.
+scale. The next step is to add a Redis backend to the Taba Server.
 
-First, we need a running Redis service[1]. From the Redis source folder created
+First, we need a running Redis service[3]. From the Redis source folder created
 during the installation process, run:
 
 $ cd utils
@@ -114,8 +114,8 @@ $ bash run_server.sh server_settings_single-shard.json &
 Note that this launches two Server processes, and points them both at the Redis
 service on port 6379.
 
-We can not launch the Agent, pointing it at both Server processes, and generate
-the test data again:
+We can now launch the Agent, pointing it at both Server processes, and generate
+the test Events again:
 
 $ bash run_agent.sh agent_settings_multi.json &
 $ bash run_client.sh
