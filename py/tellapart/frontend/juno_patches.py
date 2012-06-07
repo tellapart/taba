@@ -22,26 +22,16 @@ from cStringIO import StringIO
 
 from tellapart.third_party import juno
 
-# Juno stores HTTP response headers in a name->value dictionary.  This can be a
-# problem when working with cookies because the HTTP specification allows us to
-# return more than one 'Set-Cookie' response header.
-#
-# Also, Juno builds its response body through a sequence of string appends.
-# When building very large responses, this becomes very inefficient.
-#
-# We fix this by sub-classing JunoResponse in TellApartJunoResponse, and
-# monkey-patching the new class on top of the original JunoResponse class.
-#
-# The sub-class changes the header() method to store 'Set-Cookie' headers in a
-# separate field in the JunoResponse, and the render() method to append these
-# to the returned HTTP response data. The sub-class also builds the body in a
-# cStringIO object, and only converts to a string when render() is called.
+# Juno has a number of deficiencies, such as the method it uses to build
+# response bodies, and how it handles multiple cookies. We fix this by
+# sub-classing JunoResponse in TellApartJunoResponse, and monkey-patching the
+# new class on top of the original JunoResponse class.
 
 class TellApartJunoResponse(juno.JunoResponse):
   """Replacement for JunoResponse which emulates it's interface, but has
   additional functionality to:
-    - Set headers for multiple cookies correctly
     - Build the response body as a cStringIO instead of string appends.
+    - Set headers for multiple cookies correctly
 
   This class is intended to be monkey patched onto the JunoRequest class in the
   juno module.
