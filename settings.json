@@ -1,0 +1,8 @@
+{
+  "AGENT_FLUSH_SECONDS": 15,
+  "AGENT_QUEUES_PER_SERVER": 2,
+  "SERVER_ENDPOINTS": [{
+    "host": "localhost",
+    "port": 10000}],
+  "AGENT_PORT": 8280
+}
