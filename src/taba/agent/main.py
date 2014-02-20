@@ -110,6 +110,8 @@ def StartTabaAgentServer(
             None))
     subproc.start()
 
+  logging.basicConfig(level=logging.WARNING)
+
   # Initialize the Taba Agent
   global_taba_agent.Initialize(
       server_endpoints,
@@ -117,7 +119,7 @@ def StartTabaAgentServer(
       queues_per_url=queues_per_url)
 
   try:
-    bottle.run(app=app, port=port, server='gevent')
+    bottle.run(app=app, host='0.0.0.0', port=port, server='gevent')
 
   finally:
     if subproc:

@@ -55,6 +55,8 @@ class TabaClient(object):
     self.client_id = client_id
     self.failures = 0
 
+    self.session = requests.session()
+
   def _Flush(self):
     """Serialize and flush the internal buffer of Events to the Taba Agent.
     """
@@ -72,7 +74,7 @@ class TabaClient(object):
       if self.dummy_mode:
         return
 
-      response = requests.get(self.event_post_url, body)
+      response = self.session.post(self.event_post_url, body)
 
       if response.status_code != 200:
         LOG.error('Failed to flush %d Taba buffer to Agent' % num_events)

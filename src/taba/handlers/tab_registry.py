@@ -50,7 +50,7 @@ def _RegisterHandler(tab_type, handler_class):
   if tab_type in _HANDLER_REGISTRY:
     raise Exception("Tab Type %s already registered" % tab_type)
 
-  _HANDLER_REGISTRY[type] = handler_class()
+  _HANDLER_REGISTRY[tab_type] = handler_class()
 
 _RegisterHandler(TabType.BUFFER, Buffer)
 

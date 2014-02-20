@@ -49,17 +49,17 @@ def valid_parameters(*params):
   def decorator(fn):
 
     @functools.wraps(fn)
-    def wrapper(request, *args, **kwargs):
+    def wrapper(*args, **kwargs):
       invalid_params = []
 
-      for key in request.input():
+      for key in bottle.request.query:
         if key not in params:
           invalid_params.append(key)
 
       if len(invalid_params) > 0:
         bottle.abort(400, 'Invalid parameters: %s' % ', '.join(invalid_params))
 
-      return fn(request, *args, **kwargs)
+      return fn(*args, **kwargs)
 
     return wrapper
   return decorator
@@ -159,8 +159,9 @@ def _GetParam(param_name):
     return param_val
 
   if not hasattr(bottle.request, 'body_decoded'):
-    if bottle.request.body:
-      bottle.request.body_decoded = cjson.decode(bottle.request.body)
+    body_content = bottle.request.body.getvalue()
+    if body_content:
+      bottle.request.body_decoded = cjson.decode(body_content)
     else:
       bottle.request.body_decoded = {}
 

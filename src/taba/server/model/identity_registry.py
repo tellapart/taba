@@ -62,7 +62,7 @@ class ServerRoles(object):
       else:
         raise ValueError('Unknown role "%s"' % role_str)
 
-      return roles
+    return roles
 
 class IdentityRegistry(object):
   """Class for managing the registration of each server process with the

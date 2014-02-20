@@ -830,6 +830,8 @@ class Bottle(object):
             raise
         except Exception:
             if not self.catchall: raise
+            stacktrace = format_exc()
+            request.environ['wsgi.errors'].write(stacktrace)
             first = HTTPError(500, 'Unhandled exception', _e(), format_exc())
 
         # These are the inner types allowed in iterator or generator objects.

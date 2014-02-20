@@ -191,7 +191,8 @@ def _StartTabaServer(
 
   # Attempt to turn heapy remote monitoring on.
   try:
-    import guppy.heapy.RM  #@UnusedImport
+    # noinspection PyUnresolvedReferences
+    import guppy.heapy.RM
   except ImportError:
     pass
 
@@ -201,6 +202,9 @@ def _StartTabaServer(
   # Compile the Cython components.
   from taba.util.misc_util import BootstrapCython
   BootstrapCython(port)
+
+  import logging
+  logging.basicConfig(level=logging.WARNING)
 
   server_name = 'taba_server.%s.%d' % (socket.gethostname(), port)
 
@@ -224,10 +228,10 @@ def _StartTabaServer(
 
   # Start the server.
   from taba.third_party import bottle
-  from taba.server import request_handlers  #@UnusedImport
+  from taba.server import request_handlers
 
   app = bottle.app()
-  bottle.run(app=app, port=port, server='gevent')
+  bottle.run(app=app, host='0.0.0.0', port=port, server='gevent')
 
 ###########################################################
 # Misc.
