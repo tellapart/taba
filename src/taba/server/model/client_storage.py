@@ -25,7 +25,7 @@ from taba.server.storage.double_index_storage import DoubleIndexStorageManager
 KEY_PREFIX = 'C'
 
 # Local caching period.
-CACHE_TTL_SEC = None  # Never expire.
+CACHE_TTL_SEC = 3600
 
 LOG = logging.getLogger(__name__)
 

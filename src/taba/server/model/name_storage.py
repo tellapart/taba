@@ -29,7 +29,7 @@ KEY_PREFIX_NID = 'N'
 KEY_PREFIX_TYPES = 'T'
 
 # Local cache Time-to-Live in seconds.
-CACHE_TTL_SEC = None  # Never expire.
+CACHE_TTL_SEC = 3600
 
 LOG = logging.getLogger(__name__)
 
