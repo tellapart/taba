@@ -11,8 +11,8 @@ Taba is a service for aggregating events from a distributed system in near
 real-time. It was built to handle high throughput and scale easily.
 
 Check out an overview of Taba's architecture on the TellApart Eng Blog:
-[http://tellapart.com/taba-low-latency-event-aggragation
-](http://tellapart.com/taba-low-latency-event-aggragation)
+[http://tellaparteng.tumblr.com/post/49814523799/taba-low-latency-event-aggregation
+](http://tellaparteng.tumblr.com/post/49814523799/taba-low-latency-event-aggregation)
 
 Also, take a look at the Overview wiki page:
 [http://github.com/tellapart/taba/wiki/Overview
