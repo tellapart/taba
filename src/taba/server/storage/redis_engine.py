@@ -83,11 +83,10 @@ class RedisConnectionPool(object):
   resource is not available.
   """
   # Timeout, in seconds, when trying to retrieve a connection from the
-  # redis connection pool. This is set extremely high, so that in effect there
-  # is no timeout (i.e. a worker will wait indefinitely for a connection to
-  # become available). It's not disabled entirely in order to account for
-  # network interruptions, or lost connections.
-  GET_CONNECTION_TIMEOUT = 10.000
+  # redis connection pool. This is set to infinite (i.e. a worker will wait
+  # indefinitely for a connection to become available). Any actual remote
+  # failure should be caught and surfaced by the socket timeout.
+  GET_CONNECTION_TIMEOUT = None
 
   def __init__(self, size, host, port, db=0, passwd=None, socket_timeout=None,
                pool_tab_prefix='default'):
@@ -408,7 +407,6 @@ class RedisEngine(object):
 
     return self._ShardedOp([(key, None) for key in keys], _ShardDelete)
 
-
   def BatchCheckAndMultiSet(self, keys, get_updates_fn):
     """Set a batch of keys transactionally using optimistic locking. Each key is
     locked and retrieved from its shard. The retrieved values are passed, one at
@@ -430,7 +428,6 @@ class RedisEngine(object):
     _ShardCheckAndSet = _ShardCheckAndSetCallable(self, get_updates_fn)
     op = self._ShardedOp([(key, None) for key in keys], _ShardCheckAndSet)
     return op
-
 
   ###################################################################
   # SETS
@@ -926,10 +923,9 @@ class RedisEngine(object):
 
     Args:
       lock_name - Name of the lock to obtain.
-      duration - Timeut of the lock in seconds.
+      duration - Timeout of the lock in seconds.
     """
-    (shard_num, _, vlock_name) = self._GetShardInfo(lock_name)
-    shard = self.shards[shard_num]
+    (_, shard, vlock_name) = self._GetShardInfo(lock_name)
 
     with shard.lock(vlock_name, duration, LOCK_WAIT_SLEEP):
       yield
