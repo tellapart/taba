@@ -40,9 +40,9 @@ class TabaClientTestCase(mox.MoxTestBase):
     self.mox.StubOutWithMock(client.time, 'time')
     client.time.time().MultipleTimes().AndReturn(1234567890)
 
-    self.mox.StubOutWithMock(requests, 'post')
+    self.mox.StubOutWithMock(taba_client.session, 'post')
 
-    requests.post('http://localhost:8280/post', body).AndReturn(resp)
+    taba_client.session.post('http://localhost:8280/post', body).AndReturn(resp)
 
     self.mox.ReplayAll()
 
