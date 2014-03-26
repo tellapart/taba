@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from taba.handlers.tab_type import RenderMode
 
 """Request handler functions for the Taba Server. These methods translate
 between the HTTP message formats and the Front-end.
@@ -23,9 +22,10 @@ import logging
 
 import cjson
 
-from taba.third_party import bottle
+from taba.handlers.tab_type import RenderMode
 from taba.server.frontend import CapacityException
 from taba.server.model import model_provider
+from taba.third_party import bottle
 from taba.util import instrumentation_util
 from taba.util import misc_util
 

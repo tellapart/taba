@@ -15,13 +15,14 @@
 import setuptools
 
 requires = [
-    'cjson >= 1.0.5',
     'cython >= 0.13',
-    'gevent == 0.13.1b', ]
+    'gevent >= 0.13',
+    'python-cjson >= 1.0.5',
+    'redis >= 2.9',
+    'requests >= 1.2.0']
 
 CLASSIFIERS = [
     'Development Status :: 4 - Beta',
-    'Environment :: No Input/Output (Daemon)',
     'Natural Language :: English',
     'Operating System :: POSIX', ]
 
@@ -33,14 +34,12 @@ dist = setuptools.setup(
     classifiers=CLASSIFIERS,
     author='Kevin Ballard',
     author_email='kevin@tellapart.com',
-    packages=setuptools.find_packages(),
+    packages=setuptools.find_packages('src/'),
+    package_dir={'': 'src'},
     install_requires=requires,
     include_package_data=True,
     namespace_packages=['taba'],
     entry_points={
         'console_scripts': [
             'taba-server = taba.server.launch_taba_server:main',
-            'taba-agent = taba.agent.main:main',
-        ],
-    },
-)
+            'taba-agent = taba.agent.main:main', ], }, )
