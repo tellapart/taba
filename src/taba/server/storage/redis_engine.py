@@ -132,12 +132,12 @@ class RedisConnectionPool(object):
     if not self.closed:
       try:
         if random.random() < 0.10:
-          client.RecordValue(
+          client.Counter(
               self.pool_tab_prefix + '_redis_conn_pool_usage',
               (self.size - self.pool.qsize(),))
         return self.pool.get(timeout=self.GET_CONNECTION_TIMEOUT)
       except Empty as e:
-        client.RecordValue(
+        client.Counter(
             self.pool_tab_prefix + '_redis_conn_pool_get_conn_timeout')
         LOG.error('Cannot get connection for %s:%d' % (self.host, self.port))
         raise e
@@ -957,7 +957,7 @@ class RedisEngine(object):
       op = Operation(success=True, response_value=keys)
 
     except ConnectionError:
-      client.RecordValue('redis_connection_error')
+      client.Counter('redis_connection_error')
       op = Operation(success=False, traceback=traceback.format_exc())
     except Exception:
       op = Operation(success=False, traceback=traceback.format_exc())
@@ -1043,7 +1043,7 @@ class RedisEngine(object):
       try:
         sub_op = shard_execute_fn(self.shards[shard_num], keys, vkeys, values)
       except ConnectionError:
-        client.RecordValue('redis_connection_error_shard_%s' % shard_num)
+        client.Counter('redis_connection_error_shard_%s' % shard_num)
         sub_op = Operation(success=False, traceback=traceback.format_exc())
       except Exception:
         sub_op = Operation(success=False, traceback=traceback.format_exc())

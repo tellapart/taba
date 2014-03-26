@@ -64,7 +64,7 @@ class TabaServerFrontend(object):
       Number of events processed (this excludes any blacklisted events).
     """
     if not model_provider.GetQueues().CanAcceptUpdate():
-      _CAPACITY_REJECTIONS.RecordValue(1)
+      _CAPACITY_REJECTIONS.Record()
       raise CapacityException()
 
     # Callback which processes a single EventBundle object.

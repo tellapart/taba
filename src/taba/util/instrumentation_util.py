@@ -55,11 +55,11 @@ class Timer(object):
     if self.use_millis:
       self.elapsed *= 1000.0
 
-    self.counter_elapsed.RecordValue(self.elapsed)
+    self.counter_elapsed.Record(self.elapsed)
 
     # Record whether we exited with an exception.
     if value is not None:
-      self.counter_exceptions.RecordValue(1)
+      self.counter_exceptions.Record(1)
 
     # Be friendly.
     if self.do_yield:

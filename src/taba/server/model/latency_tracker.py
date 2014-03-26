@@ -31,11 +31,11 @@ LOG = logging.getLogger(__name__)
 KEY_LATENCY_HASH = 'Latency'
 
 # Period in seconds at which to sync with the database.
-CLUSTER_LATENCY_REFRESH_FREQUECY_SEC = 30
+CLUSTER_LATENCY_REFRESH_FREQUENCY_SEC = 30
 
 # Period in seconds for which a database latency record will be used to compute
 # the total cluster latency.
-EXPIRY = CLUSTER_LATENCY_REFRESH_FREQUECY_SEC * 10
+EXPIRY = CLUSTER_LATENCY_REFRESH_FREQUENCY_SEC * 10
 
 # Percentile of latencies to pull from local samples.
 PERCENTILE = 0.50
@@ -49,11 +49,11 @@ taba_events = client.Tab('taba_events_recieved')
 
 taba_enqueue = client.Tab(
     'taba_latency_enqueue_sec',
-    type=TabType.PERCENTILE_GROUP)
+    tab_type=TabType.PERCENTILE_GROUP)
 
 taba_dequeue = client.Tab(
     'taba_latency_task_in_queue_ms',
-    type=TabType.PERCENTILE_GROUP)
+    tab_type=TabType.PERCENTILE_GROUP)
 
 taba_processed = client.Tab(
     'taba_latency_task_processed_ms',
@@ -120,9 +120,9 @@ class LatencyTracker(object):
     self.event_hist[0] += count
 
     avg_latency = sum_latency / count if count else 0
-    taba_enqueue.RecordValue(avg_latency)
+    taba_enqueue.Record(avg_latency)
 
-    taba_events.RecordValue(count)
+    taba_events.Record(count)
 
   def RecordForDequeue(self, enqueue_times):
     """Record the latency for a Task, from the time it was added to a Queue,
@@ -133,7 +133,7 @@ class LatencyTracker(object):
     """
     now = time.time()
     for enqueue_time in enqueue_times:
-      taba_dequeue.RecordValue((now - enqueue_time) * 1000)
+      taba_dequeue.Record((now - enqueue_time) * 1000)
 
   def RecordForProcessed(self, enqueue_times):
     """Record the latency for a Task, from the time it was added to a Queue,
@@ -144,7 +144,7 @@ class LatencyTracker(object):
     """
     now = time.time()
     for enqueue_time in enqueue_times:
-      taba_processed.RecordValue((now - enqueue_time) * 1000)
+      taba_processed.Record((now - enqueue_time) * 1000)
       self.processed_sampler.AddValue(now - enqueue_time, now)
 
   def GetClusterLatency(self):

@@ -16,9 +16,9 @@
 """
 
 from collections import defaultdict
+import time
 
 import cjson
-import gevent
 
 # Delimiter between consecutive entries in a block.
 RECORD_DELIMITER = '\n'
@@ -77,7 +77,7 @@ def EncodeEventTuple(event):
   Returns:
     String representation of the Event Tuple.
   """
-  gevent.sleep(0)
+  time.sleep(0)
 
   encoded_event = list(event)
   encoded_event[2] = cjson.encode(encoded_event[2])
@@ -124,7 +124,7 @@ def EncodeMultiClient(client_to_name_to_events, encode_events=True):
       parts.extend(events)
       parts.append('')
 
-      gevent.sleep(0)
+      time.sleep(0)
 
     parts.append('')
 
@@ -256,7 +256,7 @@ def DecodeStreaming(body, decode_events=True, do_yield=True):
       raise Exception('Invalid state %s' % state)
 
     if total_events % 5000 == 0 and do_yield:
-      gevent.sleep(0)
+      time.sleep(0)
 
   # Process the last block, in case the body is missing the final blank line.
   if bundle.num_events > 0:
