@@ -27,8 +27,8 @@ import zlib
 import gevent
 import redis
 
-from taba.handlers import tab_registry
 from taba.server.model import model_provider
+from taba.server.model import tab_registry
 from taba.server.storage import util
 from taba.util import misc_util
 from taba.util import thread_util

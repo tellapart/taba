@@ -35,7 +35,8 @@ def Initialize(
     use_memory_engine=False,
     use_debug=False,
     name_blacklist=None,
-    client_blacklist=None):
+    client_blacklist=None,
+    additional_handlers=None):
   """Initialize the Taba Server storage and controller stack.
 
   Args:
@@ -55,17 +56,20 @@ def Initialize(
     client_blacklist - List of regular expressions which will be used to ignore
         any matching Client Names. If None, no Client blacklisting will be
         performed.
+    additional_handlers - Map from TabType string to fully qualified class
+        names, used to augment or override the default Handler mapping.
   """
   from taba.server.storage import memory_engine
   from taba.server.storage import redis_engine
   from taba.server import backend
   from taba.server import frontend
+  from taba.server.model import client_storage
   from taba.server.model import identity_registry
   from taba.server.model import latency_tracker
+  from taba.server.model import name_storage
   from taba.server.model import queue_registry
   from taba.server.model import state_manager
-  from taba.server.model import client_storage
-  from taba.server.model import name_storage
+  from taba.server.model import tab_registry
 
   global _engine
   global _clients
@@ -79,6 +83,9 @@ def Initialize(
 
   global debug
   debug = use_debug
+
+  # Initialize the Handler registry.
+  tab_registry.InitializeRegistry(additional_handlers)
 
   # Initialize the bottom-level storage manager.
   if use_memory_engine:

@@ -103,7 +103,8 @@ def _LaunchProcesses(settings):
           True,
           settings.get('DEBUG', False),
           settings.get('NAME_BLACKLIST', None),
-          settings.get('CLIENT_BLACKLIST', None),)
+          settings.get('CLIENT_BLACKLIST', None),
+          settings.get('ADDITIONAL_HANDLERS', None))
 
       process_info = ProcessInfo(None, args, port_offset)
       process_infos.append(process_info)
@@ -160,7 +161,8 @@ def _StartTabaServer(
     priority=False,
     debug=False,
     name_blacklist=None,
-    client_blacklist=None):
+    client_blacklist=None,
+    additional_handlers=None):
   """Initialize the Taba Server worker process.
 
   Args:
@@ -218,7 +220,8 @@ def _StartTabaServer(
       use_memory_engine,
       debug,
       name_blacklist,
-      client_blacklist)
+      client_blacklist,
+      additional_handlers)
 
   # Setup the local Taba Client.
   if agent_url:
