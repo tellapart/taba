@@ -228,12 +228,12 @@ def NewState(max_samples=DEFAULT_MAX_SAMPLES):
   return state_obj
 
 def FoldEvents(state_buffer, events):
-  """Given a state buffer and a list of Varz Events, fold the Events into the
-  State, and return the updated State Buffer.
+  """Given a state buffer and a list of Events, fold the Events into the State,
+  and return the updated State Buffer.
 
   Args:
     state_buffer - A state buffer of the type returned by NewState().
-    events - A list of VarzEvent objects.
+    events - A list of Event objects.
 
   Returns:
     A state Python binary string object with the events folded in.
