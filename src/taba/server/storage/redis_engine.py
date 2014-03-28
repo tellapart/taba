@@ -26,15 +26,13 @@ import random
 import traceback
 
 import gevent
-from gevent.queue import Empty, LifoQueue
 import redis
-from redis.connection import DefaultParser
 from redis.exceptions import ConnectionError
+from redis.sentinel import Sentinel
 
 from taba import client
 from taba.server.storage.util import CompoundOperation
 from taba.server.storage.util import Operation
-from taba.util import thread_util
 from taba.util.thread_util import YieldByCount
 
 # The number of times to retry a transaction due to a WatchError before giving
@@ -65,120 +63,22 @@ LOG = logging.getLogger(__name__)
 
 class RedisServerEndpoint(object):
   """Redis Server end-point specification struct"""
-  def __init__(self, host, port, vbucket_start, vbucket_end):
+  def __init__(self, shard_name, vbucket_start, vbucket_end):
     """
     Args:
-      host - Host name string of end-point.
-      port - Port number on the host for the end-point.
+      shard_name - Sentinel name of the Dababase shard.
       vbucket_start - First Virtual Bucket in the range the end-point handles.
       vbucket_end - Last Virtual Bucket in the range the end-point handles.
     """
-    self.host = host
-    self.port = port
+    self.shard_name = shard_name
     self.vbucket_start = vbucket_start
     self.vbucket_end = vbucket_end
 
-class RedisConnectionPool(object):
-  """Pool of Redis Connections that uses a gevent LifoQueue to block when a
-  resource is not available.
+class BlockingSentinelConnectionPool(
+    redis.BlockingConnectionPool,
+    redis.sentinel.SentinelConnectionPool):
   """
-  # Timeout, in seconds, when trying to retrieve a connection from the
-  # redis connection pool. This is set to infinite (i.e. a worker will wait
-  # indefinitely for a connection to become available). Any actual remote
-  # failure should be caught and surfaced by the socket timeout.
-  GET_CONNECTION_TIMEOUT = None
-
-  def __init__(self, size, host, port, db=0, passwd=None, socket_timeout=None,
-               pool_tab_prefix='default'):
-    """
-    Args:
-      size - Number of connections to maintain in the pool.
-      host - The hostname to use for making connections.
-      port - The port to use for making connections.
-      db - The database number to connect to.
-      passwd - The password to use for accessing the database.
-      socket_timeout - The socket timeout value for connections.
-      pool_tab_prefix - A tab prefix to use when logging tabs for the
-          connection pool.
-    """
-    self.host = host
-    self.port = port
-    self.size = size
-    self.pool_tab_prefix = pool_tab_prefix
-
-    self.all = set()
-    self.pool = LifoQueue(maxsize=self.size)
-    self.closed = False
-
-    for _ in xrange(self.size):
-      connection = redis.Connection(
-          host, port, db, passwd,
-          socket_timeout,
-          encoding='utf-8',
-          encoding_errors='strict',
-          parser_class=DefaultParser)
-      self.all.add(connection)
-      self.pool.put(connection)
-
-  def get_connection(self, command_name, *keys, **options):
-    """Get a connection from the pool. If no connection is available, this call
-    will block.
-
-    NOTE: This method is required to match the redis client's native connection
-          pool.
-
-    This will also raise the gevent.queue.Empty Exception if the pool is closed.
-    """
-    if not self.closed:
-      try:
-        if random.random() < 0.10:
-          client.Counter(
-              self.pool_tab_prefix + '_redis_conn_pool_usage',
-              (self.size - self.pool.qsize(),))
-        return self.pool.get(timeout=self.GET_CONNECTION_TIMEOUT)
-      except Empty as e:
-        client.Counter(
-            self.pool_tab_prefix + '_redis_conn_pool_get_conn_timeout')
-        LOG.error('Cannot get connection for %s:%d' % (self.host, self.port))
-        raise e
-    else:
-      raise Empty()
-
-  def release(self, connection):
-    """Return a connection to the pool.
-
-    NOTE: This method is required to match the redis client's native connection
-          pool.
-    """
-    if connection not in self.all:
-      raise ValueError()
-
-    self.pool.put(connection)
-
-  def disconnect(self):
-    """Close all the connections managed by this pool.
-
-    NOTE: This method is required to match the redis client's native connection
-          pool.
-    """
-    for connection in self.all:
-      connection.disconnect()
-
-  def shutdown(self):
-    """Shutdown this connection pool.
-    """
-    self.closed = True
-    try:
-      # Wait for all the connections to finish and get returned to the pool.
-      def _wait_ready():
-        while not self.pool.full():
-          gevent.sleep(0.5)
-      thread_util.PerformOperationWithTimeout(30, _wait_ready)
-    except Exception as e:
-      LOG.error(e)
-    finally:
-      # Disconnect anyway.
-      self.disconnect()
+  """
 
 class RedisEngine(object):
   """Class for interfacing with a cluster of Redis servers.
@@ -190,11 +90,11 @@ class RedisEngine(object):
   """
 
   def __init__(self,
+      sentinels,
       endpoints,
       num_vbuckets,
       pool_size=2,
-      timeout=CONNECTION_TIMEOUT,
-      pool_tab_prefix='default'):
+      timeout=CONNECTION_TIMEOUT):
     """
     Args:
       endpoints - List of RedisServerEndpoint objects.
@@ -208,7 +108,7 @@ class RedisEngine(object):
     self.num_vbuckets = num_vbuckets
     self.num_endpoints = len(endpoints)
 
-    # Sort the end0points by vbucket start, and make sure all the vbuckets
+    # Sort the end-points by vbucket start, and make sure all the vbuckets
     # are accounted for.
     endpoints = sorted(endpoints, key=lambda e: e.vbucket_start)
     if endpoints[0].vbucket_start != 0:
@@ -223,24 +123,17 @@ class RedisEngine(object):
             'Virtual Bucket range mismatch between end-points %d and %d' %
             (i, i + 1))
 
-    # Generate a map of vbucket start to redis client.
+    self.sentinel = Sentinel(sentinels, socket_timeout=timeout)
+
     self.shards = []
     self.vbucket_starts = []
     for endpoint in endpoints:
-      if timeout:
-        pool = RedisConnectionPool(
-            pool_size, endpoint.host, endpoint.port, socket_timeout=timeout,
-            pool_tab_prefix=pool_tab_prefix)
-      else:
-        pool = RedisConnectionPool(
-            pool_size, endpoint.host, endpoint.port,
-            pool_tab_prefix=pool_tab_prefix)
+      endpoint_client = self.sentinel.master_for(
+          endpoint.shard_name,
+          connection_pool_class=BlockingSentinelConnectionPool,
+          pool_size=pool_size)
 
-      r = redis.StrictRedis(
-          host=endpoint.host,
-          port=endpoint.port,
-          connection_pool=pool)
-      self.shards.append(r)
+      self.shards.append(endpoint_client)
       self.vbucket_starts.append(endpoint.vbucket_start)
 
   def ShutDown(self):
