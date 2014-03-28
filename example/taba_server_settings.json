@@ -1,0 +1,23 @@
+{
+  'SERVER_ROLES': 'fe,be',
+  'SERVER_WORKERS': 1,
+
+  'BASE_PORT': 8300,
+  'AGENT_PORT': 8279,
+
+  'DB_SETTINGS': {
+    'USE_MEMORY_DB': false,
+    'NUM_VBUCKETS': 1000,
+
+    'SENTINELS': [
+      ['localhost', 26379]
+    ],
+
+    'SHARDS': [
+      {'shard_name': 'shard1', 'vbuckets': [0, 1000]}
+    ],
+
+  }
+
+}
+

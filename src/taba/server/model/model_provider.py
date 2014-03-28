@@ -29,10 +29,8 @@ _backend = None
 
 def Initialize(
     server_name,
-    db_endpoints,
-    db_vbuckets,
+    db_settings,
     roles='fe',
-    use_memory_engine=False,
     use_debug=False,
     name_blacklist=None,
     client_blacklist=None,
@@ -41,14 +39,8 @@ def Initialize(
 
   Args:
     server_name - Unique name for this server process.
-    db_endpoints - List of database end-point information dictionaries. Each
-        entry should contain 'host', 'port', 'vbuckets' (where 'vbuckets' is
-        a 2 element list specifying the start and end vbucket for that
-        end-point).
-    db_vbuckets - Total number of vbuckets in the database.
+    db_settings -
     roles - Role specification string (i.e. comma separated ServerRoles values).
-    use_memory_engine - If True, use an in-process memory storage engine. This
-        does _NOT_ support persistence!
     use_debug - Whether to run the server in debug mode.
     name_blacklist - List of regular expressions which will be used to ignore
         any matching Tab Names. If None, no Name blacklisting will be
@@ -88,22 +80,20 @@ def Initialize(
   tab_registry.InitializeRegistry(additional_handlers)
 
   # Initialize the bottom-level storage manager.
-  if use_memory_engine:
+  if db_settings.get('USE_MEMORY_DB'):
     _engine = memory_engine.MemoryRedisEngine()
 
   else:
-    redis_endpoints = []
-    for endpoint in db_endpoints:
-      redis_endpoints.append(
-          redis_engine.RedisServerEndpoint(
-              host=endpoint['host'],
-              port=endpoint['port'],
-              vbucket_start=endpoint['vbuckets'][0],
-              vbucket_end=endpoint['vbuckets'][1]))
+    endpoints = [
+      redis_engine.RedisServerEndpoint(
+          ep['shard_name'], ep['vbuckets'][0], ep['vbuckets'][1])
+      for ep in db_settings['SHARDS']]
 
     _engine = redis_engine.RedisEngine(
-        redis_endpoints, db_vbuckets, timeout=60.0,
-        pool_tab_prefix='taba_server')
+        db_settings['SENTINELS'],
+        endpoints,
+        db_settings['NUM_VBUCKETS'],
+        timeout=60.0)
 
   # Parse some additional settings.
   roles = identity_registry.ServerRoles.ParseRoles(roles)
