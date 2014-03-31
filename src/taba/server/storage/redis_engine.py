@@ -31,8 +31,8 @@ from redis.exceptions import ConnectionError
 from redis.sentinel import Sentinel
 
 from taba import client
-from taba.server.storage.redis_connection_pool import \
-  BlockingSentinelMasterGeventConnectionPool
+from taba.server.storage.redis_connection_pool import (
+    BlockingSentinelMasterGeventConnectionPool)
 from taba.server.storage.util import CompoundOperation
 from taba.server.storage.util import Operation
 from taba.util.thread_util import YieldByCount
@@ -65,10 +65,11 @@ LOCK_WAIT_SLEEP = 0.010
 
 class RedisServerEndpoint(object):
   """Redis Server end-point specification struct"""
+
   def __init__(self, shard_name, vbucket_start, vbucket_end):
     """
     Args:
-      shard_name - Sentinel name of the Dababase shard.
+      shard_name - Sentinel name of the Redis shard.
       vbucket_start - First Virtual Bucket in the range the end-point handles.
       vbucket_end - Last Virtual Bucket in the range the end-point handles.
     """

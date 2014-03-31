@@ -163,7 +163,7 @@ def _StartTabaServer(
 
   Args:
     port - Port to listen on for requests.
-    db_settings -
+    db_settings - Dict of DB settings.
     roles - Comma delimited list of ServerRoles.
     agent_url - Agent URL to use for posting internally generated Events.
     priority - If True, bump up this process' priority.

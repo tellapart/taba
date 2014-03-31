@@ -99,7 +99,6 @@ class BlockingSentinelMasterGeventConnectionPool(object):
     """Get a connection from the pool.
 
     Args: Ignored. Included to match ConnectionPool API.
-
     """
     if self.closed:
       raise Empty()

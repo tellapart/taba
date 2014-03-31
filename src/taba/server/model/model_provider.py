@@ -39,7 +39,7 @@ def Initialize(
 
   Args:
     server_name - Unique name for this server process.
-    db_settings -
+    db_settings - Dict of DB settings.
     roles - Role specification string (i.e. comma separated ServerRoles values).
     use_debug - Whether to run the server in debug mode.
     name_blacklist - List of regular expressions which will be used to ignore
