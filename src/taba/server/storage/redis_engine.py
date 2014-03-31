@@ -31,9 +31,13 @@ from redis.exceptions import ConnectionError
 from redis.sentinel import Sentinel
 
 from taba import client
+from taba.server.storage.redis_connection_pool import \
+  BlockingSentinelMasterGeventConnectionPool
 from taba.server.storage.util import CompoundOperation
 from taba.server.storage.util import Operation
 from taba.util.thread_util import YieldByCount
+
+LOG = logging.getLogger(__name__)
 
 # The number of times to retry a transaction due to a WatchError before giving
 # up entirely and raising an exception. This should be set very high, since
@@ -59,8 +63,6 @@ CONNECTION_TIMEOUT = 5.000
 # The amount of time to sleep between attempts to acquire a lock.
 LOCK_WAIT_SLEEP = 0.010
 
-LOG = logging.getLogger(__name__)
-
 class RedisServerEndpoint(object):
   """Redis Server end-point specification struct"""
   def __init__(self, shard_name, vbucket_start, vbucket_end):
@@ -73,12 +75,6 @@ class RedisServerEndpoint(object):
     self.shard_name = shard_name
     self.vbucket_start = vbucket_start
     self.vbucket_end = vbucket_end
-
-class BlockingSentinelConnectionPool(
-    redis.BlockingConnectionPool,
-    redis.sentinel.SentinelConnectionPool):
-  """
-  """
 
 class RedisEngine(object):
   """Class for interfacing with a cluster of Redis servers.
@@ -130,7 +126,7 @@ class RedisEngine(object):
     for endpoint in endpoints:
       endpoint_client = self.sentinel.master_for(
           endpoint.shard_name,
-          connection_pool_class=BlockingSentinelConnectionPool,
+          connection_pool_class=BlockingSentinelMasterGeventConnectionPool,
           pool_size=pool_size)
 
       self.shards.append(endpoint_client)

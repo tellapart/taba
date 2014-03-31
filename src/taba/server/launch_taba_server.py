@@ -214,8 +214,9 @@ def _StartTabaServer(
   # Setup the local Taba Client.
   if agent_url:
     from taba import client
+    from taba.client.gevent_engine import GeventEngine
     client_name = 'taba_server.%s' % socket.gethostname()
-    client.Initialize(client_name, agent_url, flush_period=10)
+    client.Initialize(client_name, agent_url, flush_period=10, engine_class=GeventEngine)
 
   # Start the server.
   from taba.third_party import bottle
