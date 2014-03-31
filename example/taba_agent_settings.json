@@ -1,0 +1,7 @@
+{
+  "AGENT_PORT": 8279,
+  "AGENT_FLUSH_SECONDS": 1,
+  "SERVER_ENDPOINTS": [
+    {"host": "localhost", "port": 8300}
+  ]
+}

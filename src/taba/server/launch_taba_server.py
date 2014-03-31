@@ -95,11 +95,9 @@ def _LaunchProcesses(settings):
 
       args = (
           port,
-          settings['DB_ENDPOINTS'],
-          settings['DB_VBUCKETS'],
+          settings['DB_SETTINGS'],
           settings['SERVER_ROLES'],
           'http://localhost:%d/post' % settings['AGENT_PORT'],
-          settings['USE_MEMORY_DB'],
           True,
           settings.get('DEBUG', False),
           settings.get('NAME_BLACKLIST', None),
@@ -153,11 +151,9 @@ def _LaunchSingleProcess(process_info):
 
 def _StartTabaServer(
     port,
-    db_endpoints,
-    db_vbuckets,
+    db_settings,
     roles,
     agent_url=None,
-    use_memory_engine=False,
     priority=False,
     debug=False,
     name_blacklist=None,
@@ -167,15 +163,9 @@ def _StartTabaServer(
 
   Args:
     port - Port to listen on for requests.
-    db_endpoints - List of database end-point information dictionaries. Each
-        entry should contain 'host', 'port', 'vbuckets' (where 'vbuckets' is
-        a 2 element list specifying the start and end vbucket for that
-        end-point).
-    db_vbuckets - Total number of vbuckets in the database.
+    db_settings - Dict of DB settings.
     roles - Comma delimited list of ServerRoles.
     agent_url - Agent URL to use for posting internally generated Events.
-    use_memory_engine - If True, use an in-memory database instead of the usual
-        Redis one. Useful for testing.
     priority - If True, bump up this process' priority.
     debug - Whether to launch in debug mode.
     name_blacklist - List of regular expressions that will be used to ignore
@@ -214,10 +204,8 @@ def _StartTabaServer(
   from taba.server.model import model_provider
   model_provider.Initialize(
       server_name,
-      db_endpoints,
-      db_vbuckets,
+      db_settings,
       roles,
-      use_memory_engine,
       debug,
       name_blacklist,
       client_blacklist,
@@ -226,8 +214,9 @@ def _StartTabaServer(
   # Setup the local Taba Client.
   if agent_url:
     from taba import client
+    from taba.client.gevent_engine import GeventEngine
     client_name = 'taba_server.%s' % socket.gethostname()
-    client.Initialize(client_name, agent_url, flush_period=10)
+    client.Initialize(client_name, agent_url, flush_period=10, engine_class=GeventEngine)
 
   # Start the server.
   from taba.third_party import bottle

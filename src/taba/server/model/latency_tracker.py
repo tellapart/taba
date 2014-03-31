@@ -78,7 +78,7 @@ class LatencyTracker(object):
 
     self._RefreshClusterLatency()
     thread_util.ScheduleOperationWithPeriod(
-        CLUSTER_LATENCY_REFRESH_FREQUECY_SEC,
+        CLUSTER_LATENCY_REFRESH_FREQUENCY_SEC,
         self._RefreshClusterLatency)
 
     # Initialize the logger greenlet.
