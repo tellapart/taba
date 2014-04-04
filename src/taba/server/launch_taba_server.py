@@ -220,7 +220,7 @@ def _StartTabaServer(
 
   # Start the server.
   from taba.third_party import bottle
-
+  from taba.server import request_handlers
   app = bottle.app()
   bottle.run(app=app, host='0.0.0.0', port=port, server='gevent')
 
