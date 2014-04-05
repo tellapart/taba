@@ -73,7 +73,7 @@ def _GetAccept(default='text/plain'):
   Returns:
     MIME type string, normalized to lower-case.
   """
-  accept = bottle.request.headers.get('HTTP_ACCEPT', None)
+  accept = bottle.request.headers.get('ACCEPT', None)
   if accept in (None, '', '*/*'):
     accept = default
 
