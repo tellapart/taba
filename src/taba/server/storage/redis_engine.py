@@ -747,6 +747,175 @@ class RedisEngine(object):
         response_value=op.response_value)
 
   ###################################################################
+  # DISTRIBUTED HASH
+  ###################################################################
+
+  def DHashGet(self, key, field):
+    """Retrieve the value stored at a field in a Distributed Hash.
+
+    Args:
+      key - The key of the Hash.
+      field - Field in the Hash to retrieve.
+
+    Returns:
+      An Operation object with the result of the query.
+    """
+    cop = self.DHashMultiGet(key, [field])
+    if cop and cop.response_value:
+      cop.response_value = cop.response_value[field]
+
+    return cop
+
+  def DHashMultiGet(self, key, fields):
+    """Retrieve a list of fields from a Distributed Hash.
+
+    Args:
+      key - The key of the Hash.
+      fields - List of fields to retrieve.
+
+    Returns:
+      An Operation object with the result of the query.
+    """
+    def _ShardDHashMultiGet(shard, h_keys, h_vkeys, values):
+      response = shard.hmget(key, h_keys)
+      values_dict = dict(itertools.izip(h_keys, response))
+      return Operation(success=True, response_value=values_dict)
+
+    cop = self._ShardedOp(
+        itertools.izip(fields, [None] * len(fields)),
+        _ShardDHashMultiGet)
+
+    if cop and cop.sub_operations:
+      cop.response_value = {}
+      for op in cop.sub_operations:
+        cop.response_value.update(op.response_value)
+
+    return cop
+
+  def DHashGetAll(self, key):
+    """Retrieve an entire Distributed Hash.
+
+    Args:
+      key - The key of the Hash.
+
+    Returns:
+      An Operation object with the result of the query.
+    """
+    def _ShardDHashGetAll(shard):
+      result = shard.hgetall(key)
+      return Operation(success=True, response_value=result)
+
+    cop = self._AllShardsOp(_ShardDHashGetAll)
+    if cop and cop.sub_operations:
+      cop.response_value = {}
+      for op in cop.sub_operations:
+        cop.response_value.update(op.response_value)
+
+    return cop
+
+  def DHashFields(self, key):
+    """Retrieve the field names of a Distributed Hash.
+
+    Args:
+      key - The key of the Hash.
+
+    Returns:
+      An Operation object with the result of the query.
+    """
+    def _ShardDHashFields(shard):
+      result = shard.hkeys(key)
+      return Operation(success=True, response_value=result)
+
+    cop = self._AllShardsOp(_ShardDHashFields)
+    if cop and cop.sub_operations:
+      cop.response_value = [
+          e for op in cop.sub_operations for e in op.response_value]
+
+    return cop
+
+  def DHashPut(self, key, field, value):
+    """Put a value to a field of a Distributed Hash.
+
+    Args:
+      key - The key of the Hash.
+      field - Field in the Hash to set.
+      value - Value to set.
+
+    Returns:
+      An Operation object with the result of the query.
+    """
+    return self.DHashMultiPut(key, {field: value})
+
+  def DHashMultiPut(self, key, mapping):
+    """Put a set of fields and values to a Distributed Hash.
+
+    Args:
+      key - The key of the Hash.
+      mapping - Dict of keys and values to set.
+
+    Returns:
+      An Operation object with the result of the query.
+    """
+    def _ShardDHashMultiPut(shard, h_keys, h_vkeys, values):
+      response = shard.hmset(key, dict(zip(h_keys, values)))
+      return Operation(success=True, response_value=[response])
+
+    return self._ShardedOp(mapping.items(), _ShardDHashMultiPut)
+
+  def DHashSize(self, key):
+    """Get the number of fields in a Distributed Hash.
+
+    Args:
+      key - The key of the Hash.
+
+    Returns:
+      An Operation object with the result of the query.
+    """
+    def _ShardDHashSize(shard):
+      response = shard.hlen(key)
+      return Operation(success=True, response_value=response)
+
+    cop = self._AllShardsOp(_ShardDHashSize)
+    if cop and cop.sub_operations:
+      cop.response_value = sum(op.response_value for op in cop.sub_operations)
+
+    return cop
+
+  def DHashDelete(self, key, field):
+    """Delete a field from a Distributed Hash.
+
+    Args:
+      key - The key of the Hash.
+      field - Field to delete from the Hash.
+
+    Returns:
+      An Operation object with the result of the query.
+    """
+    return self.DHashBatchDelete(key, [field])
+
+  def DHashBatchDelete(self, key, fields):
+    """Delete a list field from a Distributed Hash.
+
+    Args:
+      key - The key of the Hash.
+      fields - Fields to delete from the Hash.
+
+    Returns:
+      An Operation object with the result of the query.
+    """
+    def _ShardDHashBatchDelete(shard, fields, vfields, values):
+      removed = shard.hdel(key, *fields)
+      return Operation(success=True, response_value=[removed])
+
+    cop = self._ShardedOp(
+        itertools.izip(fields, [None] * len(fields)),
+       _ShardDHashBatchDelete)
+    if cop and cop.sub_operations:
+      cop.response_value = sum(op.response_value for op in cop.sub_operations)
+
+    return cop
+
+  ###################################################################
   # LISTS
   ###################################################################
 
@@ -951,6 +1120,44 @@ class RedisEngine(object):
     # Sort the combined responses back into the request order.
     responses = sorted(responses, key=lambda r: r[0])
     op.response_value = [r[1] for r in responses]
+
+    return op
+
+  def _AllShardsOp(self, shard_execute_fn):
+    """Perform an operation on the necessary shards in the cluster, and
+    aggregate the results. The callback will be invoked for each shard, with the
+    keys, virtual keys, and and values that belong to that shard.
+
+    Args:
+      key_value_tuples - List of tuples of (key, value) for the operation.
+      shard_execute_fn - Callback for executing the desired operation in each
+          shard. The signature is f(shard) => Operation
+
+    Returns:
+      A CompoundOperation with the results of the queries. The response_value
+      field is the combined response_value of each sub-operation (assuming all
+      the sub-operations succeeded and returned a response_value)
+    """
+    # Split the request for each shard into a separate greenlet to allow the
+    # requests to happen in parallel.
+    op = CompoundOperation()
+
+    def _ShardGreenletWrapper(shard):
+      try:
+        sub_op = shard_execute_fn(shard)
+      except ConnectionError:
+        client.Counter('redis_connection_error')
+        sub_op = Operation(success=False, traceback=traceback.format_exc())
+      except Exception:
+        sub_op = Operation(success=False, traceback=traceback.format_exc())
+
+      # Aggregate the results.
+      op.AddOp(sub_op)
+
+    greenlets = [
+        gevent.spawn(_ShardGreenletWrapper, shard)
+        for shard in self.shards]
+    gevent.joinall(greenlets)
 
     return op
 
