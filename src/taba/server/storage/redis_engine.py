@@ -26,6 +26,7 @@ import random
 import traceback
 
 import gevent
+import mmh3
 import redis
 from redis.exceptions import ConnectionError
 from redis.sentinel import Sentinel
@@ -1055,7 +1056,7 @@ class RedisEngine(object):
     Returns:
       Virtual bucket number.
     """
-    return hash(key) % self.num_vbuckets
+    return mmh3.hash(key) % self.num_vbuckets
 
   def _MakeVkey(self, key, vbucket):
     """For a given client key and Virtual Bucket, generate the virtual key.

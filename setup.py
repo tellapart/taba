@@ -17,6 +17,7 @@ import setuptools
 requires = [
     'cython >= 0.13',
     'gevent >= 0.13',
+    'mmh3 >= 2.3',
     'python-cjson >= 1.0.5',
     'redis >= 2.9',
     'requests >= 1.2.0']
