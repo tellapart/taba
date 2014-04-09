@@ -119,7 +119,7 @@ class IdentityRegistry(object):
     id_str = _MakeIdString(self.roles)
 
     util.CheckedOp('putting refreshed identity %s: %s' % (self.name, id_str),
-        self.engine.HashPut,
+        self.engine.DHashPut,
         KEY_IDENTITY_MAP, self.name, id_str)
 
   def ShutDown(self):
@@ -127,7 +127,7 @@ class IdentityRegistry(object):
     """
     LOG.info('Unregistering identity...')
     util.CheckedOp('removing identity',
-        self.engine.HashDelete,
+        self.engine.DHashDelete,
         KEY_IDENTITY_MAP, self.name)
 
   def NumServers(self):
@@ -137,7 +137,7 @@ class IdentityRegistry(object):
       Number of currently registered servers.
     """
     op = util.StrictOp('retrieving number of registered servers',
-        self.engine.HashSize,
+        self.engine.DHashSize,
         KEY_IDENTITY_MAP)
 
     return op.response_value
@@ -153,7 +153,7 @@ class IdentityRegistry(object):
       ({Alive Server Name: [Roles]}, {Expired Server Name: [Roles]}).
     """
     op = util.StrictOp('retrieving all registered servers',
-        self.engine.HashGetAll,
+        self.engine.DHashGetAll,
         KEY_IDENTITY_MAP)
 
     if not op.response_value:
@@ -191,7 +191,7 @@ class IdentityRegistry(object):
     all_ops = []
     for name in expired_servers:
       all_ops.append(util.CheckedOp('deleting expired server %s % name',
-          self.engine.HashDelete,
+          self.engine.DHashDelete,
           KEY_IDENTITY_MAP, name))
 
     return util.CompoundOperation(*all_ops)
