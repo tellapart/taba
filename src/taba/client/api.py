@@ -146,7 +146,7 @@ class Tab(object):
     self.name = name
     self.type = tab_type
 
-  def Record(self, value):
+  def Record(self, value=1):
     """Post an event to this Tab.
 
     Args:
