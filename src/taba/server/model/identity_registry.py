@@ -17,6 +17,7 @@ Each process in the Taba cluster registers itself, along with a list of Roles.
 """
 
 import logging
+import random
 import time
 
 from taba.util import thread_util
@@ -28,8 +29,17 @@ DEFAULT_PING_FREQUENCY_SEC = 15
 # Number of seconds between passes to unregister expired servers.
 DEFAULT_FLUSH_FREQUENCY_SEC = 60
 
+# The target probability that stale identity mappings will be flushed at each
+# round. Lower values (exponentially) allow each server to attempt to
+# participate in fewer rounds, lowering DB contention for the lock. (Setting
+# this to 1.0 will force all servers to attempt to participate in each round).
+FLUSH_PARTICIPATION_PROB = 0.999
+
 # Timeout in seconds after which a server is considered dead.
 DEFAULT_TIMEOUT_SEC = DEFAULT_PING_FREQUENCY_SEC * 3.1
+
+# Period in seconds for which to cache the number of servers in the cluster.
+NUM_SERVERS_CACHE_TTL = 60
 
 # Database Hash key for the mapping.
 KEY_IDENTITY_MAP = 'AllServers'
@@ -97,6 +107,7 @@ class IdentityRegistry(object):
     self.ping_frequency = ping_frequency
     self.flush_frequency = flush_frequency
     self.timeout = timeout
+    self.num_servers_cache = None
 
     self._Ping()
     thread_util.ScheduleOperationWithPeriod(self.ping_frequency, self._Ping)
@@ -136,11 +147,15 @@ class IdentityRegistry(object):
     Returns:
       Number of currently registered servers.
     """
-    op = util.StrictOp('retrieving number of registered servers',
-        self.engine.DHashSize,
-        KEY_IDENTITY_MAP)
+    now = time.time()
+    if self.num_servers_cache is None or self.num_servers_cache[1] < now:
+      op = util.StrictOp('retrieving number of registered servers',
+          self.engine.DHashSize,
+          KEY_IDENTITY_MAP)
 
-    return op.response_value
+      self.num_servers_cache = (op.response_value, now + NUM_SERVERS_CACHE_TTL)
+
+    return self.num_servers_cache[0]
 
   def GetAllServers(self, role=None):
     """Retrieve the set of all registered servers (alive and expired).
@@ -181,6 +196,15 @@ class IdentityRegistry(object):
     Returns:
       Operation object.
     """
+    # Randomly determine whether to participate in this round. As the number of
+    # registered servers increases, each individual server has to participate
+    # less often, even while maintaining a similar probability of the entire
+    # operation happening at each round.
+    num_servers = float(self.NumServers())
+    threshold = (1.0 - FLUSH_PARTICIPATION_PROB) ** (1.0 / num_servers)
+    if random.random() < threshold:
+      return
+
     _, expired_servers = self.GetAllServers()
 
     if not expired_servers:
