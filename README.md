@@ -15,10 +15,6 @@ Check out an overview of Taba's architecture on the TellApart Eng Blog:
 [http://tellaparteng.tumblr.com/post/49814523799/taba-low-latency-event-aggregation
 ](http://tellaparteng.tumblr.com/post/49814523799/taba-low-latency-event-aggregation)
 
-Also, take a look at the Overview wiki page:
-[http://github.com/tellapart/taba/wiki/Overview
-](http://github.com/tellapart/taba/wiki/Overview)
-
 Example
 ====================
 
@@ -80,9 +76,9 @@ Or Taba can be installed directly from the repository:
 Installing Redis
 ====================
 
-The Taba Server is designed to use a group of Redis instances (> 2.4) as its
-database. For details about installing Redis, please visit the [Redis Downloads
-page](http://redis.io/download)
+The Taba Server is uses a group of Redis instances with Sentinels as its
+database. It requires at least Redis 2.8. For details about installing Redis,
+please visit the [Redis Downloads page](http://redis.io/download)
 
 Deploying Taba
 ====================

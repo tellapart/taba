@@ -43,6 +43,7 @@ class ThreadEngine(BufferedAsyncClientEngine):
     """
     if self.thread is not None:
       self.thread.stop()
+    self._Flush()
 
 class PeriodicThread(threading.Thread):
   """Thread class that will execute a callable at a fixed period.

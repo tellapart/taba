@@ -9,6 +9,8 @@ syntax: glob
 .classpath
 .project
 build/
+dist/
+src/taba.egg-info/
 .pydevproject
 .metadata
 .settings

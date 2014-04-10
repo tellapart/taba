@@ -10,11 +10,12 @@
     "NUM_VBUCKETS": 1000,
 
     "SENTINELS": [
-      ["localhost", 26379]
+      ["localhost", 18000]
     ],
 
     "SHARDS": [
-      {"shard_name": "shard1", "vbuckets": [0, 999]}
+      {"shard_name": "shard1", "vbuckets": [0,   499]}
+      {"shard_name": "shard1", "vbuckets": [500, 999]}
     ]
 
   }

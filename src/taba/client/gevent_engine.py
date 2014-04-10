@@ -42,3 +42,4 @@ class GeventEngine(BufferedAsyncClientEngine):
     """
     if self.greenlet is not None:
       self.greenlet.kill()
+    self._Flush()
