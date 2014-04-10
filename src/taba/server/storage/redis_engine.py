@@ -913,7 +913,8 @@ class RedisEngine(object):
         itertools.izip(fields, [None] * len(fields)),
        _ShardDHashBatchDelete)
     if cop and cop.sub_operations:
-      cop.response_value = sum(op.response_value for op in cop.sub_operations)
+      cop.response_value = \
+          sum(op.response_value[0] for op in cop.sub_operations)
 
     return cop
 
