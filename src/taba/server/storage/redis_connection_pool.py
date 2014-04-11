@@ -29,6 +29,11 @@ LOG = logging.getLogger(__name__)
 
 class BlockingSentinelMasterGeventConnectionPool(object):
   """Blocking, Sentinel enabled Redis connection pool.
+
+  We use this instead of the built-in connection pool in redis-py, because the
+  built-in one for sentinel does not support a blocking implementation, which
+  Taba relies on. (There is a blocking connection pool in redis-py, but it is
+  incompatible with sentinel connections).
   """
 
   # Timeout, in seconds, when trying to retrieve a connection from the

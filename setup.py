@@ -16,7 +16,7 @@ import setuptools
 
 requires = [
     'cython >= 0.13',
-    'gevent >= 0.13',
+    'gevent == 0.13.1',
     'python-cjson >= 1.0.5',
     'redis >= 2.9',
     'requests >= 1.2.0']
@@ -28,7 +28,7 @@ CLASSIFIERS = [
 
 dist = setuptools.setup(
     name='taba',
-    version='0.3.1',
+    version='0.3.2',
     license='Apache License, Version 2.0',
     url='http://github.com/tellapart/taba',
     classifiers=CLASSIFIERS,

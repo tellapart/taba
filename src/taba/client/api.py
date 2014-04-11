@@ -150,6 +150,6 @@ class Tab(object):
     """Post an event to this Tab.
 
     Args:
-      *args - List of arguments to pass to this Event.
+      value - Value to record an Event for.
     """
     RecordEvent(self.name, value, self.type)

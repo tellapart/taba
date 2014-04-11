@@ -94,13 +94,12 @@ class RedisEngine(object):
       timeout=CONNECTION_TIMEOUT):
     """
     Args:
+      sentinels - List of sentinel connection info.
       endpoints - List of RedisServerEndpoint objects.
       num_vbuckets - The total number of configured Virtual Buckets.
       pool_size - The number of connections in each connection pool for each
           end-point.
       timeout - Socket connection timeout.
-      pool_tab_prefix - A tab prefix to use when logging tabs for the
-          connection pool.
     """
     self.num_vbuckets = num_vbuckets
     self.num_endpoints = len(endpoints)

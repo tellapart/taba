@@ -22,7 +22,7 @@ import sys
 from gevent import monkey
 monkey.patch_all()
 
-from taba.agent.handlers import global_taba_agent
+from taba.agent.handlers import _GLOBAL_TABA_AGENT
 from taba.third_party import bottle
 from taba.util import misc_util
 
@@ -113,7 +113,7 @@ def StartTabaAgentServer(
   logging.basicConfig(level=logging.WARNING)
 
   # Initialize the Taba Agent
-  global_taba_agent.Initialize(
+  _GLOBAL_TABA_AGENT.Initialize(
       server_endpoints,
       flush_period_seconds,
       queues_per_url=queues_per_url)

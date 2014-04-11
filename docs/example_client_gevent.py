@@ -26,7 +26,7 @@ client.Initialize(
     client_id='example_client',
     event_post_url='http://localhost:8279/post',
     flush_period=1,
-    engine_class=gevent_engine)
+    engine_class=gevent_engine.GeventEngine)
 
 # Record some test data.
 client.Counter('example_moving_counter', 100)

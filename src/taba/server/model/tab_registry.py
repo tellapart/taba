@@ -41,12 +41,10 @@ def InitializeRegistry(additional_handlers=None):
         class name of a Handler to use for that type. This will augment and/or
         override the defaults.
   """
-  global _HANDLERS
-
   type_to_class_name = copy.copy(_DEFAULT_HANDLERS)
   type_to_class_name.update(additional_handlers or {})
 
-  for tab_type, handler_class_name in type_to_class_name .iteritems():
+  for tab_type, handler_class_name in type_to_class_name.iteritems():
     name_parts = handler_class_name.split('.')
     module_name = '.'.join(name_parts[:-1])
     class_name = name_parts[-1]
@@ -63,5 +61,4 @@ def GetHandler(tab_type):
   Returns:
     A TabHandler object.
   """
-  global _HANDLERS
   return _HANDLERS.get(tab_type)

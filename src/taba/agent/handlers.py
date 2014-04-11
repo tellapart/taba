@@ -27,7 +27,7 @@ from taba.third_party import bottle
 LOG = logging.getLogger(__name__)
 
 # The TabaAgent singleton.
-global_taba_agent = TabaAgent()
+_GLOBAL_TABA_AGENT = TabaAgent()
 
 @bottle.post('/post')
 def HandlePost():
@@ -54,7 +54,7 @@ def HandlePost():
   # Add the events to the Taba Agent buffer.
   try:
     for client_id, name_events_map in client_to_names_to_events.iteritems():
-      global_taba_agent.Buffer(client_id, name_events_map)
+      _GLOBAL_TABA_AGENT.Buffer(client_id, name_events_map)
 
   except Exception:
     LOG.error("Error buffering events")
@@ -71,7 +71,7 @@ def HandleStatus():
   if accept in ('', '*/*'):
     accept = 'text/plain'
 
-  agent_status = global_taba_agent.Status()
+  agent_status = _GLOBAL_TABA_AGENT.Status()
 
   if accept == 'text/plain':
     for key, val in agent_status.iteritems():

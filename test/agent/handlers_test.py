@@ -44,7 +44,7 @@ class AgentHandlersTestCase(mox.MoxTestBase):
     """Test /status with default accept.
     """
     self.mox.StubOutWithMock(handlers, 'global_taba_agent')
-    handlers.global_taba_agent.Status().AndReturn({
+    handlers._GLOBAL_TABA_AGENT.Status().AndReturn({
       'all_events': 100,
       'buffered_events': 10,
       'buffer_pct': 0.10,
@@ -69,7 +69,7 @@ class AgentHandlersTestCase(mox.MoxTestBase):
     """Test /status with default application/json accept.
     """
     self.mox.StubOutWithMock(handlers, 'global_taba_agent')
-    handlers.global_taba_agent.Status().AndReturn({
+    handlers._GLOBAL_TABA_AGENT.Status().AndReturn({
       'all_events': 100,
       'buffered_events': 10,
       'buffer_pct': 0.10,
@@ -98,7 +98,7 @@ class AgentHandlersTestCase(mox.MoxTestBase):
 
     expected_events = defaultdict(list)
     expected_events['name1'] = ['["typeA", 1234567890, "12.34"]',]
-    handlers.global_taba_agent.Buffer('client1', expected_events)
+    handlers._GLOBAL_TABA_AGENT.Buffer('client1', expected_events)
 
     postdata = transport.Encode(
         'client1',
