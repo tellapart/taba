@@ -26,9 +26,13 @@ CLASSIFIERS = [
     'Natural Language :: English',
     'Operating System :: POSIX', ]
 
+with open('README.md') as f:
+  description = f.read()
+
 dist = setuptools.setup(
     name='taba',
-    version='0.3.2',
+    version='0.3.3',
+    long_description=description,
     license='Apache License, Version 2.0',
     url='http://github.com/tellapart/taba',
     classifiers=CLASSIFIERS,
