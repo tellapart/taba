@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import setuptools
 
 requires = [
@@ -26,12 +27,14 @@ CLASSIFIERS = [
     'Natural Language :: English',
     'Operating System :: POSIX', ]
 
-with open('README.md') as f:
-  description = f.read()
+description = ''
+if os.path.exists('README.md'):
+  with open('README.md') as f:
+    description = f.read()
 
 dist = setuptools.setup(
     name='taba',
-    version='0.3.3',
+    version='0.3.4',
     long_description=description,
     license='Apache License, Version 2.0',
     url='http://github.com/tellapart/taba',
