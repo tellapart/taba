@@ -129,7 +129,7 @@ Or Taba can be installed directly from the repository:
 Installing Redis
 ====================
 
-The Taba Server is uses a group of Redis instances with Sentinels as its
+The Taba Server uses a group of Redis instances with Sentinels as its
 database. It requires at least Redis 2.8. For details about installing Redis,
 please visit the [Redis Downloads page](http://redis.io/download)
 
