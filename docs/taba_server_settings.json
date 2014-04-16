@@ -14,8 +14,8 @@
     ],
 
     "SHARDS": [
-      {"shard_name": "shard1", "vbuckets": [0,   499]}
-      {"shard_name": "shard1", "vbuckets": [500, 999]}
+      {"shard_name": "shard1", "vbuckets": [0,   499]},
+      {"shard_name": "shard2", "vbuckets": [500, 999]}
     ]
 
   }
