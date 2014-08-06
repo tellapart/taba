@@ -12,8 +12,8 @@ systems in near real-time. It was built to handle high throughput and scale
 easily.
 
 Check out an overview of Taba's architecture on the TellApart Eng Blog:
-[http://tellaparteng.tumblr.com/post/49814523799/taba-low-latency-event-aggregation
-](http://tellaparteng.tumblr.com/post/49814523799/taba-low-latency-event-aggregation)
+[http://www.tellapart.com/taba-low-latency-event-aggregation
+](http://www.tellapart.com/taba-low-latency-event-aggregation)
 
 Example
 ====================
