@@ -34,7 +34,7 @@ if os.path.exists('README.md'):
 
 dist = setuptools.setup(
     name='taba',
-    version='0.3.4',
+    version='0.3.5',
     long_description=description,
     license='Apache License, Version 2.0',
     url='http://github.com/tellapart/taba',
